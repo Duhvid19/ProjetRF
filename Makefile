@@ -1,17 +1,16 @@
 CC = gcc
-CFLAGS = -Wall -Wextra -std=c99
-OBJ = data.o knn.o
+CFLAGS = -Wall -Wextra -std=c99 -I. -Itools
+SRC = main.c data.c knn.c kmeans.c tools/evaluation.c
+OBJ = $(SRC:.c=.o)
+TARGET = test_project
 
-all: knn
+all: $(TARGET)
 
-data.o: data.c headers.h
-	$(CC) $(CFLAGS) -c data.c
+$(TARGET): $(OBJ)
+	$(CC) $(CFLAGS) -o $(TARGET) $(OBJ)
 
-knn.o: knn.c headers.h
-	$(CC) $(CFLAGS) -c knn.c
-
-knn: $(OBJ)
-	$(CC) $(CFLAGS) -o knn $(OBJ)
+%.o: %.c
+	$(CC) $(CFLAGS) -c $< -o $@
 
 clean:
-	rm -f *.o knn
+	rm -f $(OBJ) $(TARGET)
