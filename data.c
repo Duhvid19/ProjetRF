@@ -1,24 +1,7 @@
-#include <dirent.h>
-#include <string.h>
-#include <stdio.h>
-#include <stdlib.h>
-
-#define MAX_FEATURES 50
-
-typedef struct{
-    int class;
-    int sample;
-    float features[MAX_FEATURES];
-    int featureCount;
-} ShapeDescriptor;
-
-typedef struct{
-    ShapeDescriptor *descriptors;
-    int n_descriptors;
-} DataSet;
+#include "headers.h"
 
 
-DataSet *readDataSet(const char *directory){
+Dataset *load_dataset(const char *directory){
     DIR *dir = opendir(directory);
 
     if (!dir){
@@ -26,15 +9,15 @@ DataSet *readDataSet(const char *directory){
         return NULL;
     }
 
-    DataSet *dataSet = (DataSet *)malloc(sizeof(DataSet));
-    if (!dataSet){
-        printf("Erreur : Memoire insuffisante pour le DataSet\n");
+    Dataset *dataset = (Dataset *)malloc(sizeof(Dataset));
+    if (!dataset){
+        printf("Erreur : Memoire insuffisante pour le Dataset\n");
         closedir(dir);
         return NULL;
     }
 
-    dataSet->n_descriptors = 0;
-    dataSet->descriptors = NULL;
+    dataset->data_count = 0;
+    dataset->data = NULL;
     struct dirent *entry;
     while ((entry = readdir(dir)) != NULL){
 
@@ -61,51 +44,37 @@ DataSet *readDataSet(const char *directory){
         }
 
         // Creation du descripteur
-        ShapeDescriptor descriptor;
-        sscanf(entry->d_name, "s%dn%d", &descriptor.class, &descriptor.sample);
-        descriptor.featureCount = 0;
-        while (fscanf(file, "%f", &descriptor.features[descriptor.featureCount]) == 1){
-            descriptor.featureCount++;
+        Data data;
+        sscanf(entry->d_name, "s%dn%d", &data.class, &data.sample);
+        data.feature_count = 0;
+        while (fscanf(file, "%f", &data.features[data.feature_count]) == 1){
+            data.feature_count++;
         }
         fclose(file);
 
         // Ajout du descripteur au tableau
-        dataSet->descriptors = (ShapeDescriptor *)realloc(dataSet->descriptors, (dataSet->n_descriptors + 1) * sizeof(ShapeDescriptor));
-        dataSet->descriptors[dataSet->n_descriptors++] = descriptor;
+        dataset->data = (Data *)realloc(dataset->data, (dataset->data_count + 1) * sizeof(Data));
+        dataset->data[dataset->data_count++] = data;
     }
 
     closedir(dir);
-    return dataSet;
+    return dataset;
 }
 
-void freeDataSet(DataSet *dataSet){
-    if (dataSet){
-        free(dataSet->descriptors);
-        free(dataSet);
+void free_dataset(Dataset *dataset){
+    if (dataset){
+        free(dataset->data);
+        free(dataset);
     }
 }
 
-void printDataSet(const DataSet *dataSet){
-    for (int i = 0; i < dataSet->n_descriptors; i++){
-        ShapeDescriptor desc = dataSet->descriptors[i];
+void print_dataset(const Dataset *dataset){
+    for (int i = 0; i < dataset->data_count; i++){
+        Data desc = dataset->data[i];
         printf("Classe: %d, Echantillon: %d, Caracteristiques: ", desc.class, desc.sample);
-        for (int j = 0; j < desc.featureCount; j++){
+        for (int j = 0; j < desc.feature_count; j++){
             printf("%.2f ", desc.features[j]);
         }
         printf("\n");
     }
-}
-
-int main(){
-    const char *dataDirectory = "./=SharvitB2/=Signatures/=Zernike7";
-    DataSet *dataSet = readDataSet(dataDirectory);
-    if (dataSet){
-        printDataSet(dataSet);
-        printf("Chargement termine : %d descripteurs trouves.\n", dataSet->n_descriptors);
-        freeDataSet(dataSet);
-    }
-    else{
-        printf("Erreur lors du chargement des donnees.\n");
-    }
-    return 0;
 }
