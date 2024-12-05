@@ -1,14 +1,25 @@
 #include "kmeans.h"
 #include <time.h> 
 
-// Initialise les centroids de manière aléatoire en choisissant des indices aléatoires
+// Initialise les centroids de manière aléatoire en choisissant des indices uniques
 void init_centroids(float centroids[][MAX_FEATURES], int k, Dataset *dataset) {
-    srand(time(NULL));  // techniquement pas obligatoire
+    srand(time(NULL)); // Initialise le générateur de nombres aléatoires
+
+    // Tableau pour suivre les indices sélectionnés
+    int selected_indices[k];
+    memset(selected_indices, -1, k * sizeof(int)); // Initialise à -1 (aucun index sélectionné)
+
     for (int i = 0; i < k; i++) {
-        int index = rand() % dataset->data_count;
-        memcpy(centroids[i], dataset->data[index].features, dataset->data[index].feature_count * sizeof(float));
+        int index;
+        do {
+            index = rand() % dataset->data_count; // Génère un index aléatoire
+        } while (selected_indices[index] != -1); // Vérifie que cet index n'a pas déjà été utilisé
+
+        selected_indices[index] = 1; // Marque cet index comme utilisé
+        memcpy(centroids[i], dataset->data[index].features, dataset->data[index].feature_count * sizeof(float)); // Copie les caractéristiques
     }
 }
+
 
 // Assigne chaque échantillon à son cluster le plus proche en calculant la distance minimale
 int assign_clusters(Dataset *dataset, float centroids[][MAX_FEATURES], int k, int *labels) {
