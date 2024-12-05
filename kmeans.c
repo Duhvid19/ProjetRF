@@ -1,22 +1,24 @@
 #include "kmeans.h"
 #include <time.h> 
 
-// Initialise les centroids de manière aléatoire en choisissant des indices uniques
-void init_centroids(float centroids[][MAX_FEATURES], int k, Dataset *dataset) {
-    srand(time(NULL)); // Initialise le générateur de nombres aléatoires
+void init_centroids(float centroids[][MAX_FEATURES], int k, Dataset *dataset){
 
-    // Tableau pour suivre les indices sélectionnés
+    srand(time(NULL)); // techniquement pas obligatoire
+
+    // on initialise un tableau d'indice à -1
     int selected_indices[k];
-    memset(selected_indices, -1, k * sizeof(int)); // Initialise à -1 (aucun index sélectionné)
+    memset(selected_indices, -1, k * sizeof(int));
 
-    for (int i = 0; i < k; i++) {
+    for (int i = 0; i < k; i++){
+
+        // on choisit un index aleatoire et verifie que ce n'est pas un doublon
         int index;
         do {
-            index = rand() % dataset->data_count; // Génère un index aléatoire
-        } while (selected_indices[index] != -1); // Vérifie que cet index n'a pas déjà été utilisé
+            index = rand() % dataset->data_count;
+        } while (selected_indices[index] != -1);
+        selected_indices[index] = 1;
 
-        selected_indices[index] = 1; // Marque cet index comme utilisé
-        memcpy(centroids[i], dataset->data[index].features, dataset->data[index].feature_count * sizeof(float)); // Copie les caractéristiques
+        memcpy(centroids[i], dataset->data[index].features, dataset->data[index].feature_count * sizeof(float));
     }
 }
 
