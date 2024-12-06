@@ -6,13 +6,11 @@
 #include <string.h>
 #include <dirent.h>
 
-// Def nbr Max caractériqtiques 
-#define MAX_FEATURES 50
-// Def nbr Max classe 
+#define MAX_FEATURES 110
 #define MAX_CLASSES 10
 
 
-typedef struct {
+typedef struct{
     int class; 
     int sample; //possiblement inutile
     float features[MAX_FEATURES]; 
@@ -20,7 +18,7 @@ typedef struct {
 } Data;
 
 
-typedef struct {
+typedef struct{
     Data *data; 
     int data_count; 
 } Dataset;

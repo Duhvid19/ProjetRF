@@ -1,8 +1,8 @@
 CC = gcc
 CFLAGS = -Wall -Wextra -std=c99 -I. -Itools
-SRC = main.c data.c knn.c kmeans.c tools/evaluation.c
+SRC = main.c data.c knn.c kmeans.c test.c
 OBJ = $(SRC:.c=.o)
-TARGET = test_project
+TARGET = project
 
 all: $(TARGET)
 
