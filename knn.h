@@ -2,7 +2,6 @@
 #define KNN_H
 
 #include "data.h"
-#include <math.h>
 
 
 typedef struct{

@@ -1,13 +1,14 @@
 #include "kmeans.h"
 #include <time.h> 
 
-void init_centroids(float centroids[][MAX_FEATURES], int k, Dataset *dataset){
+float **init_centroids(int k, Dataset *dataset){
+    float **centroids = malloc(k * sizeof(float *));
+    for (int i = 0; i < k; i++){
+        centroids[i] = malloc(dataset->feature_count * sizeof(float));
+    }
 
     srand(time(NULL)); // techniquement pas obligatoire
-
-    // on initialise un tableau d'indice à -1
-    int selected_indices[k];
-    memset(selected_indices, -1, k * sizeof(int));
+    int *selected_indices = calloc(dataset->data_count,  sizeof(int));
 
     for (int i = 0; i < k; i++){
 
@@ -15,70 +16,80 @@ void init_centroids(float centroids[][MAX_FEATURES], int k, Dataset *dataset){
         int index;
         do{
             index = rand() % dataset->data_count;
-        } while (selected_indices[index] != -1);
+        } while (selected_indices[index] != 0);
         selected_indices[index] = 1;
 
-        memcpy(centroids[i], dataset->data[index].features, dataset->data[index].feature_count * sizeof(float));
+        for (int j = 0; j < dataset->feature_count; j++){
+            centroids[i][j] = dataset->data[index].features[j];
+        }
     }
+
+    free(selected_indices);
+    return centroids;
 }
 
 
-int assign_clusters(Dataset *dataset, float centroids[][MAX_FEATURES], int k, int *labels){
-    int changes = 0;
+void assign_clusters(Dataset *dataset, float **centroids, int k, int *clusters){
     for (int i = 0; i < dataset->data_count; i++){
         float min_dist = INFINITY;
         int closest_cluster = -1;
 
+        // obtient le cluster le plus proche pour chaque data
         for (int j = 0; j < k; j++){
-            float dist = euclidean(dataset->data[i].features, centroids[j], dataset->data[i].feature_count);
+            float dist = euclidean(dataset->data[i].features, centroids[j], dataset->feature_count);
             if (dist < min_dist){
                 min_dist = dist;
                 closest_cluster = j;
             }
         }
-
-        if (labels[i] != closest_cluster){
-            labels[i] = closest_cluster;
-            changes++; // si changement, alors incremente
-        }
+        clusters[i] = closest_cluster;
     }
-    return changes; 
 }
 
-void update_centroids(Dataset *dataset, float centroids[][MAX_FEATURES], int k, int *labels){
-    int cluster_counts[k];
-    memset(cluster_counts, 0, sizeof(cluster_counts)); 
-    memset(centroids, 0, k * MAX_FEATURES * sizeof(float)); 
+void update_centroids(Dataset *dataset, float **centroids, int k, int *clusters){
+    int *cluster_counts = calloc(k, sizeof(int)); // nombre de data dans les clusters
+    float **new_centroids = malloc(k * sizeof(float *));
+    for (int i = 0; i < k; i++){
+        new_centroids[i] = calloc(dataset->feature_count, sizeof(float));
+    }
 
     for (int i = 0; i < dataset->data_count; i++){
-        int cluster = labels[i];
-        for (int j = 0; j < dataset->data[i].feature_count; j++){
-            centroids[cluster][j] += dataset->data[i].features[j]; 
-        }
+        int cluster = clusters[i];
         cluster_counts[cluster]++; 
+        for (int j = 0; j < dataset->feature_count; j++){
+            new_centroids[cluster][j] += dataset->data[i].features[j]; 
+        }
     }
 
     for (int i = 0; i < k; i++){
         if (cluster_counts[i] > 0){
-            for (int j = 0; j < MAX_FEATURES; j++){
-                centroids[i][j] /= cluster_counts[i];
+            for (int j = 0; j < dataset->feature_count; j++){
+                centroids[i][j] = new_centroids[i][j]/cluster_counts[i];
             }
         }
     }
+
+    for (int i = 0; i < k; i++){
+        free(new_centroids[i]);
+    }
+    free(new_centroids);
+    free(cluster_counts);
 }
 
 
-void kmeans(Dataset *dataset, int k, int max_iterations, int *labels){
-    float centroids[k][MAX_FEATURES];
-    init_centroids(centroids, k, dataset); 
+void kmeans(Dataset *dataset, int k, int max_iterations, int *clusters){
 
-    int iterations = 0;
-    int changes;
-    do{
-        changes = assign_clusters(dataset, centroids, k, labels);
-        update_centroids(dataset, centroids, k, labels); 
-        iterations++; 
-    } while (changes > 0 && iterations < max_iterations); // repete jusqu'à stabilisation des clusters
+    // initialisation des centroides
+    float **centroids = init_centroids(k, dataset);
 
-    printf("k-means termine en %d iterations.\n", iterations); 
+    // assignation des clusters + mise a jour des centroides
+    for (int i = 0; i < max_iterations; i++){
+        assign_clusters(dataset, centroids, k, clusters);
+        update_centroids(dataset, centroids, k, clusters);
+    }
+
+    for (int i = 0; i < k; i++){
+        free(centroids[i]);
+    }
+    free(centroids);
 }

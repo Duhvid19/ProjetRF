@@ -4,9 +4,9 @@
 #include "data.h"
 #include "knn.h" // necessaire pour euclidean()
 
-void init_centroids(float centroids[][MAX_FEATURES], int k, Dataset *dataset);
-int assign_clusters(Dataset *dataset, float centroids[][MAX_FEATURES], int k, int *labels);
-void update_centroids(Dataset *dataset, float centroids[][MAX_FEATURES], int k, int *labels);
-void kmeans(Dataset *dataset, int k, int max_iterations, int *labels);
+float **init_centroids(int k, Dataset *dataset);
+void assign_clusters(Dataset *dataset, float **centroids, int k, int *clusters);
+void update_centroids(Dataset *dataset, float **centroids, int k, int *clusters);
+void kmeans(Dataset *dataset, int k, int max_iterations, int *clusters);
 
 #endif

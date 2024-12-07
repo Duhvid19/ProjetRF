@@ -17,6 +17,7 @@ Dataset *load_dataset(const char *directory){
 
     // initialisation du dataset
     dataset->data_count = 0;
+    dataset->feature_count = 0;
     dataset->data = NULL; 
 
     struct dirent *entry;
@@ -35,7 +36,7 @@ Dataset *load_dataset(const char *directory){
             continue;
         }
 
-         // verifie si la classe est entre 1 et 10, si c'est pas le cas on ignore
+         // verifie si la classe est entre 1 et le nombre max de classe, si c'est pas le cas on ignore
         int class_num;
         sscanf(entry->d_name, "s%d", &class_num);
         if (class_num < 1 || class_num > MAX_CLASSES){
@@ -46,13 +47,13 @@ Dataset *load_dataset(const char *directory){
         // creation du data
         Data data;
         sscanf(entry->d_name, "s%dn%d", &data.class, &data.sample); // extrait la classe et l'echantillon
-        data.feature_count = 0;
-        while (fscanf(file, "%f", &data.features[data.feature_count]) == 1){ // lit les caracteristiques du fichier
-            data.feature_count++;
+        dataset->feature_count = 0;
+        while (fscanf(file, "%f", &data.features[dataset->feature_count]) == 1){ // lit les caracteristiques du fichier
+            dataset->feature_count++;
         }
         fclose(file);
 
-        // ajout du descripteur au tableau
+        // ajout de la donnee au tableau
         dataset->data = (Data *)realloc(dataset->data, (dataset->data_count + 1) * sizeof(Data)); //redimension 
         dataset->data[dataset->data_count++] = data;
     }
@@ -71,11 +72,31 @@ void free_dataset(Dataset *dataset){
 
 void print_dataset(const Dataset *dataset){
     for (int i = 0; i < dataset->data_count; i++){
-        Data desc = dataset->data[i];
-        printf("Classe: %d, Echantillon: %d, Caracteristiques: ", desc.class, desc.sample);
-        for (int j = 0; j < desc.feature_count; j++){
-            printf("%.2f ", desc.features[j]); // affiche les caracteristiques
+        Data data = dataset->data[i];
+        printf("Classe: %d, Echantillon: %d, Caracteristiques: ", data.class, data.sample);
+        for (int j = 0; j < dataset->feature_count; j++){
+            printf("%.2f ", data.features[j]); // affiche les caracteristiques
         }
         printf("\n");
     }
 }
+
+void normalize_dataset(Dataset *dataset){
+    float min = INFINITY, max = -INFINITY;
+
+    // trouve le min et max global
+    for (int i = 0; i < dataset->data_count; i++){
+        for (int j = 0; j < dataset->feature_count; j++){
+            if (dataset->data[i].features[j] < min) min = dataset->data[i].features[j];
+            if (dataset->data[i].features[j] > max) max = dataset->data[i].features[j];
+        }
+    }
+
+    // normalise toutes les donnees
+    for (int i = 0; i < dataset->data_count; i++){
+        for (int j = 0; j < dataset->feature_count; j++){
+            dataset->data[i].features[j] = (dataset->data[i].features[j] - min) / (max - min);
+        }
+    }
+}
+

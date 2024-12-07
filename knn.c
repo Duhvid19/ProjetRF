@@ -10,7 +10,7 @@ float euclidean(float *a, float *b, int n){
 
 void init_neighbors(Neighbor *neighbors, Dataset *dataset, Data target){
     for (int i = 0; i < dataset->data_count; i++){
-        neighbors[i].distance = euclidean(dataset->data[i].features, target.features, target.feature_count);
+        neighbors[i].distance = euclidean(dataset->data[i].features, target.features, dataset->feature_count);
         neighbors[i].class_label = dataset->data[i].class;
     }
 }
